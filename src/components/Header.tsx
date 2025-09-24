@@ -12,9 +12,9 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                CampusDiary
+                CampusDiary RCOEM
               </h1>
-              <p className="text-sm text-muted-foreground">Campus Placement Assistant</p>
+              <p className="text-sm text-muted-foreground">A comprehensive list of companies that visited RCOEM for campus recruitment drives.</p>
             </div>
           </div>
           
