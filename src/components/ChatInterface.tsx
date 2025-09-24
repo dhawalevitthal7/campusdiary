@@ -84,9 +84,18 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
 
       const data = await response.json();
       
+      // Extract only the response text and format it properly
+      let responseText = data.response || "I'm sorry, I couldn't process that request.";
+      
+      // Clean up the response text formatting
+      responseText = responseText
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold formatting
+        .replace(/\*(.*?)\*/g, '$1')     // Remove markdown italic formatting
+        .trim();
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: data.response || "I'm sorry, I couldn't process that request.",
+        text: responseText,
         isBot: true,
         timestamp: new Date()
       };
