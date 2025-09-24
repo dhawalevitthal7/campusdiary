@@ -1,11 +1,36 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useCallback } from "react";
+import { Header } from "@/components/Header";
+import { CompanyList } from "@/components/CompanyList";
+import { ChatInterface } from "@/components/ChatInterface";
+import { MobileCompanyDrawer } from "@/components/MobileCompanyDrawer";
 
 const Index = () => {
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+
+  const handleCompanySelect = useCallback((company: string) => {
+    setSelectedCompany(company);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="h-screen flex flex-col bg-background">
+      <Header />
+      
+      {/* Mobile Company Drawer */}
+      <MobileCompanyDrawer onCompanySelect={handleCompanySelect} />
+      
+      <div className="flex-1 flex overflow-hidden">
+        {/* Desktop Company Sidebar */}
+        <div className="w-80 flex-shrink-0 hidden md:block">
+          <CompanyList onCompanySelect={handleCompanySelect} />
+        </div>
+        
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
+          <ChatInterface 
+            onCompanySelect={handleCompanySelect}
+            selectedCompany={selectedCompany}
+          />
+        </div>
       </div>
     </div>
   );
