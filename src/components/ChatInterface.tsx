@@ -79,7 +79,7 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get response");
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -103,20 +103,30 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error("Error sending message:", error);
+      
+      let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again later.";
+      
+      // Provide more specific error messages
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        errorMessage = "🔒 Connection Error: The API server needs to allow requests from this domain. Please check CORS configuration on your backend server.";
+      } else if (error instanceof Error && error.message.includes("HTTP error")) {
+        errorMessage = `Server Error: ${error.message}. Please check if the API endpoint is working correctly.`;
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to get response. Please try again.",
+        title: "Connection Error",
+        description: "Failed to get response from the API server. Check console for details.",
         variant: "destructive",
       });
       
-      const errorMessage: Message = {
+      const errorBotMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm sorry, I'm having trouble connecting right now. Please try again later.",
+        text: errorMessage,
         isBot: true,
         timestamp: new Date()
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => [...prev, errorBotMessage]);
     } finally {
       setIsLoading(false);
     }

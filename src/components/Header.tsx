@@ -1,4 +1,5 @@
 import { GraduationCap, Sparkles } from "lucide-react";
+import { ApiTestButton } from "./ApiTestButton";
 
 export function Header() {
   return (
@@ -17,9 +18,12 @@ export function Header() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-gradient-light px-4 py-2 rounded-full border border-border">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">AI Powered</span>
+          <div className="flex items-center gap-4">
+            <ApiTestButton />
+            <div className="flex items-center gap-2 bg-gradient-light px-4 py-2 rounded-full border border-border">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">AI Powered</span>
+            </div>
           </div>
         </div>
       </div>
