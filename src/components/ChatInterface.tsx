@@ -154,28 +154,28 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
   return (
     <div className="flex flex-col h-full bg-gradient-light">
       {/* Chat Messages */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
-        <div className="space-y-4 max-w-4xl mx-auto">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 p-2 sm:p-4">
+        <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex items-start gap-3 ${message.isBot ? "" : "flex-row-reverse"}`}
+              className={`flex items-start gap-2 sm:gap-3 ${message.isBot ? "" : "flex-row-reverse"}`}
             >
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+              <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
                 message.isBot 
                   ? "bg-gradient-primary text-white" 
                   : "bg-primary-light text-primary-dark"
               }`}>
-                {message.isBot ? <Bot size={16} /> : <User size={16} />}
+                {message.isBot ? <Bot size={14} className="sm:w-4 sm:h-4" /> : <User size={14} className="sm:w-4 sm:h-4" />}
               </div>
               
-              <div className={`max-w-[70%] ${message.isBot ? "" : "flex flex-col items-end"}`}>
-                <div className={`rounded-2xl px-4 py-3 shadow-custom-sm ${
+              <div className={`max-w-[85%] sm:max-w-[70%] ${message.isBot ? "" : "flex flex-col items-end"}`}>
+                <div className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-custom-sm ${
                   message.isBot
                     ? "bg-white text-foreground rounded-tl-sm"
                     : "bg-primary text-primary-foreground rounded-tr-sm"
                 }`}>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+                  <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                 </div>
                 <span className="text-xs text-muted-foreground mt-1 px-2">
                   {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -185,14 +185,14 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
           ))}
           
           {isLoading && (
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-primary text-white flex items-center justify-center">
-                <Bot size={16} />
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gradient-primary text-white flex items-center justify-center">
+                <Bot size={14} className="sm:w-4 sm:h-4" />
               </div>
-              <div className="bg-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-custom-sm">
+              <div className="bg-white rounded-2xl rounded-tl-sm px-3 py-2 sm:px-4 sm:py-3 shadow-custom-sm">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">Thinking...</span>
+                  <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
+                  <span className="text-xs sm:text-sm text-muted-foreground">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -202,17 +202,17 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
 
       {/* Suggested Questions */}
       {messages.length === 1 && (
-        <div className="px-4 pb-4">
+        <div className="px-2 sm:px-4 pb-2 sm:pb-4">
           <div className="max-w-4xl mx-auto">
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            <h3 className="text-xs sm:text-sm font-medium text-muted-foreground mb-2 sm:mb-3">
               Try asking about:
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
               {suggestedQuestions.map((question, index) => (
                 <button
                   key={index}
                   onClick={() => handleSuggestedQuestion(question)}
-                  className="text-left p-3 bg-white rounded-lg shadow-custom-sm hover:shadow-custom-md transition-all duration-200 hover:bg-gradient-card border border-border text-sm"
+                  className="text-left p-2 sm:p-3 bg-white rounded-lg shadow-custom-sm hover:shadow-custom-md transition-all duration-200 hover:bg-gradient-card border border-border text-xs sm:text-sm"
                 >
                   {question}
                 </button>
@@ -223,21 +223,22 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       )}
 
       {/* Input Area */}
-      <div className="border-t bg-white p-4">
+      <div className="border-t bg-white p-2 sm:p-4">
         <div className="max-w-4xl mx-auto">
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about companies, CTC, eligibility, or placement process..."
-              className="flex-1 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Ask about companies, CTC, eligibility..."
+              className="flex-1 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
               disabled={isLoading}
             />
             <Button
               onClick={handleSendMessage}
               disabled={!inputValue.trim() || isLoading}
-              className="bg-gradient-primary hover:opacity-90 rounded-xl px-6 shadow-custom-sm"
+              className="bg-gradient-primary hover:opacity-90 rounded-xl px-3 sm:px-6 shadow-custom-sm"
+              size="sm"
             >
               {isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
