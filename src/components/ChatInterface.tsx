@@ -92,7 +92,7 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       const data = await response.json();
       
       // Extract only the response text and format it properly
-      let responseText = data.response || "I'm sorry, I couldn't process that request.";
+      let responseText = data.result || data.response || "I'm sorry, I couldn't process that request.";
       
       // Clean up the response text formatting
       responseText = responseText
