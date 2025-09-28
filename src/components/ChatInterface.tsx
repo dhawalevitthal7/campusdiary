@@ -70,13 +70,20 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     setIsLoading(true);
 
     try {
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      
       const response = await fetch("https://campus-diary-lwk6.onrender.com/query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ query: inputValue }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -107,7 +114,9 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       let errorMessage = "I'm sorry, I'm having trouble connecting right now. Please try again later.";
       
       // Provide more specific error messages
-      if (error instanceof TypeError && error.message === "Failed to fetch") {
+      if (error.name === 'AbortError') {
+        errorMessage = "⏰ Request timeout: The API is taking too long to respond. Please try again or check if the server is running.";
+      } else if (error instanceof TypeError && error.message === "Failed to fetch") {
         errorMessage = "🔒 Connection Error: The API server needs to allow requests from this domain. Please check CORS configuration on your backend server.";
       } else if (error instanceof Error && error.message.includes("HTTP error")) {
         errorMessage = `Server Error: ${error.message}. Please check if the API endpoint is working correctly.`;
