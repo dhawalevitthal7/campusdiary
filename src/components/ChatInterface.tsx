@@ -65,17 +65,22 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
   // Rate limiting functions
   const getRateLimitData = (): RateLimitData => {
     const stored = localStorage.getItem(STORAGE_KEY);
+    console.log('Getting rate limit data from localStorage:', stored);
     if (!stored) {
       return { count: 0, resetTime: 0 };
     }
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      console.log('Parsed rate limit data:', parsed);
+      return parsed;
     } catch {
+      console.log('Failed to parse rate limit data, returning default');
       return { count: 0, resetTime: 0 };
     }
   };
 
   const setRateLimitData = (data: RateLimitData) => {
+    console.log('Setting rate limit data to localStorage:', data);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   };
 
@@ -83,15 +88,20 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     const now = Date.now();
     const data = getRateLimitData();
     
-    // If reset time has passed, reset the counter
-    if (now >= data.resetTime) {
+    console.log('Rate limit check - Current data:', data);
+    console.log('Rate limit check - Current time:', now);
+    
+    // If reset time has passed and there is a reset time set, reset the counter
+    if (data.resetTime > 0 && now >= data.resetTime) {
       const newData = { count: 0, resetTime: 0 };
       setRateLimitData(newData);
+      console.log('Rate limit reset - New data:', newData);
       return { allowed: true, remainingRequests: RATE_LIMIT_MAX_REQUESTS, timeUntilReset: 0 };
     }
     
     // Check if limit is exceeded
     if (data.count >= RATE_LIMIT_MAX_REQUESTS) {
+      console.log('Rate limit exceeded');
       return { 
         allowed: false, 
         remainingRequests: 0, 
@@ -99,6 +109,7 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       };
     }
     
+    console.log('Rate limit check passed - Remaining:', RATE_LIMIT_MAX_REQUESTS - data.count);
     return { 
       allowed: true, 
       remainingRequests: RATE_LIMIT_MAX_REQUESTS - data.count, 
@@ -112,7 +123,11 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     const newCount = data.count + 1;
     const newResetTime = newCount >= RATE_LIMIT_MAX_REQUESTS ? now + RATE_LIMIT_WINDOW_MS : data.resetTime;
     
-    setRateLimitData({ count: newCount, resetTime: newResetTime });
+    const newData = { count: newCount, resetTime: newResetTime };
+    console.log('Incrementing request count - Old data:', data);
+    console.log('Incrementing request count - New data:', newData);
+    
+    setRateLimitData(newData);
   };
 
   // Update rate limit state on component mount and periodically
@@ -138,8 +153,11 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
 
     // Check rate limit before processing
     const rateLimitCheck = checkRateLimit();
+    console.log('Rate limit check result:', rateLimitCheck);
+    
     if (!rateLimitCheck.allowed) {
       const minutesLeft = Math.ceil(rateLimitCheck.timeUntilReset / (60 * 1000));
+      console.log('Rate limit blocked request, minutes left:', minutesLeft);
       toast({
         title: "Rate limit exceeded",
         description: `You've reached the limit of ${RATE_LIMIT_MAX_REQUESTS} questions. Please wait ${minutesLeft} minutes before asking again.`,
@@ -147,6 +165,8 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       });
       return;
     }
+
+    console.log('Rate limit check passed, proceeding with message');
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -164,6 +184,7 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     
     // Update remaining requests state
     const updatedCheck = checkRateLimit();
+    console.log('Updated rate limit check after increment:', updatedCheck);
     setRemainingRequests(updatedCheck.remainingRequests);
 
     try {
