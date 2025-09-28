@@ -28,6 +28,15 @@ const suggestedQuestions = [
   "Tell me about FAANG companies visiting campus"
 ];
 
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const STORAGE_KEY = 'chat_rate_limit';
+
+interface RateLimitData {
+  count: number;
+  resetTime: number;
+}
+
 export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -39,6 +48,8 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [remainingRequests, setRemainingRequests] = useState(RATE_LIMIT_MAX_REQUESTS);
+  const [cooldownEndsAt, setCooldownEndsAt] = useState<number | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -51,12 +62,91 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     }
   };
 
+  // Rate limiting functions
+  const getRateLimitData = (): RateLimitData => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) {
+      return { count: 0, resetTime: 0 };
+    }
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return { count: 0, resetTime: 0 };
+    }
+  };
+
+  const setRateLimitData = (data: RateLimitData) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  };
+
+  const checkRateLimit = (): { allowed: boolean; remainingRequests: number; timeUntilReset: number } => {
+    const now = Date.now();
+    const data = getRateLimitData();
+    
+    // If reset time has passed, reset the counter
+    if (now >= data.resetTime) {
+      const newData = { count: 0, resetTime: 0 };
+      setRateLimitData(newData);
+      return { allowed: true, remainingRequests: RATE_LIMIT_MAX_REQUESTS, timeUntilReset: 0 };
+    }
+    
+    // Check if limit is exceeded
+    if (data.count >= RATE_LIMIT_MAX_REQUESTS) {
+      return { 
+        allowed: false, 
+        remainingRequests: 0, 
+        timeUntilReset: data.resetTime - now 
+      };
+    }
+    
+    return { 
+      allowed: true, 
+      remainingRequests: RATE_LIMIT_MAX_REQUESTS - data.count, 
+      timeUntilReset: 0 
+    };
+  };
+
+  const incrementRequestCount = () => {
+    const now = Date.now();
+    const data = getRateLimitData();
+    const newCount = data.count + 1;
+    const newResetTime = newCount >= RATE_LIMIT_MAX_REQUESTS ? now + RATE_LIMIT_WINDOW_MS : data.resetTime;
+    
+    setRateLimitData({ count: newCount, resetTime: newResetTime });
+  };
+
+  // Update rate limit state on component mount and periodically
+  useEffect(() => {
+    const updateRateLimitState = () => {
+      const { remainingRequests: remaining, timeUntilReset } = checkRateLimit();
+      setRemainingRequests(remaining);
+      setCooldownEndsAt(timeUntilReset > 0 ? Date.now() + timeUntilReset : null);
+    };
+
+    updateRateLimitState();
+    const interval = setInterval(updateRateLimitState, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
+
+    // Check rate limit before processing
+    const rateLimitCheck = checkRateLimit();
+    if (!rateLimitCheck.allowed) {
+      const minutesLeft = Math.ceil(rateLimitCheck.timeUntilReset / (60 * 1000));
+      toast({
+        title: "Rate limit exceeded",
+        description: `You've reached the limit of ${RATE_LIMIT_MAX_REQUESTS} questions. Please wait ${minutesLeft} minutes before asking again.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -68,6 +158,13 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
     setIsLoading(true);
+
+    // Increment request count
+    incrementRequestCount();
+    
+    // Update remaining requests state
+    const updatedCheck = checkRateLimit();
+    setRemainingRequests(updatedCheck.remainingRequests);
 
     try {
       // Create AbortController for timeout
@@ -234,6 +331,23 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
       {/* Input Area */}
       <div className="border-t bg-white p-2 sm:p-4">
         <div className="max-w-4xl mx-auto">
+          {/* Rate Limit Indicator */}
+          <div className="flex items-center justify-between mb-2 text-xs text-muted-foreground">
+            <span>
+              {remainingRequests > 0 
+                ? `${remainingRequests} questions remaining` 
+                : cooldownEndsAt 
+                  ? `Rate limit reached. Reset in ${Math.ceil((cooldownEndsAt - Date.now()) / (60 * 1000))} minutes`
+                  : 'Questions available'}
+            </span>
+            {remainingRequests <= 2 && remainingRequests > 0 && (
+              <span className="text-amber-600">Low remaining questions</span>
+            )}
+            {cooldownEndsAt && (
+              <span className="text-destructive">Cooldown active</span>
+            )}
+          </div>
+          
           <div className="flex gap-2 sm:gap-3">
             <Input
               value={inputValue}
@@ -241,11 +355,11 @@ export function ChatInterface({ onCompanySelect, selectedCompany }: ChatInterfac
               onKeyPress={handleKeyPress}
               placeholder="Ask about companies, CTC, eligibility..."
               className="flex-1 rounded-xl border-border focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-              disabled={isLoading}
+              disabled={isLoading || remainingRequests === 0}
             />
             <Button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || isLoading}
+              disabled={!inputValue.trim() || isLoading || remainingRequests === 0}
               className="bg-gradient-primary hover:opacity-90 rounded-xl px-3 sm:px-6 shadow-custom-sm"
               size="sm"
             >
