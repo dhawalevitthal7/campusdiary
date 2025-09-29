@@ -18,17 +18,12 @@ interface ChatInterfaceProps {
 }
 
 const suggestedQuestions = [
-  "What companies are visiting for placements?",
-  "What is the CTC range offered by tech companies?",
-  "Tell me about internship opportunities and stipends",
-  "What are the eligibility criteria for placements?",
-  "How many rounds are there in the placement process?",
   "Which roles are available for CS students?",
   "What are the requirements for Infosys placement?",
   "Tell me about FAANG companies visiting campus"
 ];
 
-const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_MAX_REQUESTS = 7;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const STORAGE_KEY = 'chat_rate_limit';
 
