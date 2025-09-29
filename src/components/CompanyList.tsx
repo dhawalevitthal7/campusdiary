@@ -127,7 +127,7 @@ export function CompanyList({ onCompanySelect }: CompanyListProps) {
       {/* Footer Stats */}
       <div className="p-4 border-t border-border bg-muted/30">
         <div className="text-xs text-muted-foreground text-center">
-          <p className="font-medium">Campus Placement 2024</p>
+          <p className="font-medium">Campus Placement 2026</p>
           <p>Click any company to ask questions</p>
         </div>
       </div>
